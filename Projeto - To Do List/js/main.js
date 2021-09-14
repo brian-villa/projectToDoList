@@ -6,6 +6,9 @@ const Main = {
 
     cacheSelectors: function() {
         this.checkButtons = document.querySelectorAll('.check')
+        this.$inputTask = document.querySelector('#inputTask')
+        this.$list = document.querySelector('#list')
+        this.$removeButtons = document.querySelectorAll('.remove')
     }, //responsável por selecionar os elementos do html e armazenar em uma variável
 
     bindEvents: function() {
@@ -15,6 +18,12 @@ const Main = {
             button.onclick = self.Events.checkButtons_click
                 
             
+        })
+
+        this.$inputTask.onkeypress = self.Events.inputTask_keypress.bind(this)
+
+        this.$removeButtons.forEach(function(button) {
+            button.onclick = self.Events.removeButton_click
         })
 
 
@@ -34,7 +43,47 @@ const Main = {
             li.classList.add('done')
             
             
+        },
+
+        inputTask_keypress: function(e){ // Dentro de uma função de um evento, o 'this' sempre vai ser o próprio elemento que adicionou no evento. Atenção aos comportamentos do 'this'
+
+
+            const key = e.key
+            const value = e.target.value
+
+            if(key === 'Enter') {
+                this.$list.innerHTML += `
+                    <li>
+                        <div class="check"></div>
+                        <label class="task">
+                            ${value}
+                        </label>
+                        
+                        <button class="remove"></button>
+                    </li>
+                `
+
+                e.target.value = ''
+
+                this.cacheSelectors()
+                this.bindEvents()
+            }
+        },
+
+        removeButton_click: function(e) {
+            let li = e.target.parentElement
+
+            li.classList.add('removed')
+
+
+            setTimeout(function() {
+                li.classList.add('hidden')
+            },300)
         }
+
+
+
+    
     },
 
 
