@@ -1,7 +1,12 @@
 const Main = {
+
+    tasks: [],
+
     init: function () {
         this.cacheSelectors()
         this.bindEvents()
+        this.getStoraged()
+        this.buildTasks()
     }, // responsável por fazer o cache dos selectors, ou seja, controlar boa parte da aplicação
 
     cacheSelectors: function() {
@@ -23,11 +28,48 @@ const Main = {
         this.$inputTask.onkeypress = self.Events.inputTask_keypress.bind(this)
 
         this.$removeButtons.forEach(function(button) {
-            button.onclick = self.Events.removeButton_click
+            button.onclick = self.Events.removeButton_click.bind(self)
         })
 
 
     }, //responsável por adicionar eventos na aplicação web
+
+    getStoraged: function() {
+        const tasks = localStorage.getItem('tasks')
+        if(tasks) {
+            this.tasks = JSON.parse(tasks) // tasks = array // tasks = variavel// scopes diferentes
+        } else {
+            localStorage.setItem('tasks', JSON.stringify([]))
+        }
+
+    }, //responsável pelo get do item Task e armazená-lo em um array vazio
+
+    getTaskHtml: function(task) {
+        return `
+            <li>
+                <div class="check"></div>
+                <label class="task">
+                    ${task}
+                </label>
+                    
+                <button class="remove" data-task="${task}"></button>
+            </li>
+        `
+
+    },
+
+    buildTasks: function() {
+        let html = ''
+
+        this.tasks.forEach(item => {
+            html += this.getTaskHtml(item.task)
+        })
+
+        this.$list.innerHTML = html
+
+        this.cacheSelectors()
+        this.bindEvents()
+    }, // montar as tasks e jogar elas no Local Storage
 
 
 
@@ -52,26 +94,37 @@ const Main = {
             const value = e.target.value
 
             if(key === 'Enter') {
-                this.$list.innerHTML += `
-                    <li>
-                        <div class="check"></div>
-                        <label class="task">
-                            ${value}
-                        </label>
-                        
-                        <button class="remove"></button>
-                    </li>
-                `
+                this.$list.innerHTML += this.getTaskHtml(value)
 
                 e.target.value = ''
 
                 this.cacheSelectors()
                 this.bindEvents()
+
+                const savedTasks = localStorage.getItem('tasks')
+                const savedTasksObjt = JSON.parse(savedTasks)
+
+                
+                const obj = [
+                    {task: value},
+                    ...savedTasksObjt, // spread operator: ele adicionar todos os itens dentro do mesmo array
+                ]
+                
+                this.tasks = obj
+                localStorage.setItem('tasks', JSON.stringify(obj))
             }
         },
 
         removeButton_click: function(e) {
-            let li = e.target.parentElement
+            const li = e.target.parentElement
+            const value = e.target.dataset['task']
+
+
+            const newTasksState = this.tasks.filter(item => item.task !== value)
+
+            localStorage.setItem('tasks', JSON.stringify(newTasksState))
+            this.tasks = newTasksState
+
 
             li.classList.add('removed')
 
@@ -85,9 +138,6 @@ const Main = {
 
     
     },
-
-
-
 
     
 } //Este Main vai controlar toda a aplicação, sendo um componente separado
