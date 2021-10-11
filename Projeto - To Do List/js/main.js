@@ -20,7 +20,7 @@ const Main = {
         const self = this
 
         this.checkButtons.forEach(function(button) {
-            button.onclick = self.Events.checkButtons_click
+            button.onclick = self.Events.checkButtons_click.bind(self)
                 
             
         })
@@ -44,19 +44,19 @@ const Main = {
 
     }, //responsável pelo get do item Task e armazená-lo em um array vazio
 
-    getTaskHtml: function(task) {
+    getTaskHtml: function(task, isDone) {
         return `
-            <li>
+            <li class="${isDone ? 'done' : ''}" data-task="${task}"> 
                 <div class="check"></div>
                 <label class="task">
                     ${task}
                 </label>
-                    
                 <button class="remove" data-task="${task}"></button>
             </li>
         `
 
     },
+
 
     buildTasks: function() {
         let html = ''
@@ -76,13 +76,25 @@ const Main = {
     Events: {
         checkButtons_click: function(e) {
             const li = e.target.parentElement
+            const value = li.dataset['task']
             const isDone = li.classList.contains('done') // verifica se existe a class .done ou não e retornando um valor boleano
 
-            if (isDone) {
-                return li.classList.remove('done') //boa prática: verificar primeiro a negação da variável, no caso estamos retornando adição da class .done e parando a execução do código no caso se for verdadeira (return), economizando custos de armazenamento, eliminando o uso do "else"
+            const newTasksState = this.tasks.map(item => {
+                if(item.task === value) {
+                    item.done = !isDone
+                }
+                return item
+            })
+
+            localStorage.setItem('tasks', JSON.stringify(newTasksState))
+
+
+
+            if (!isDone) {
+                return li.classList.add('done') //boa prática: verificar primeiro a negação da variável, no caso estamos retornando adição da class .done e parando a execução do código no caso se for verdadeira (return), economizando custos de armazenamento, eliminando o uso do "else"
             } 
 
-            li.classList.add('done')
+            li.classList.remove('done')
             
             
         },
@@ -92,6 +104,7 @@ const Main = {
 
             const key = e.key
             const value = e.target.value
+            const isDone = false
 
             if(key === 'Enter') {
                 this.$list.innerHTML += this.getTaskHtml(value)
@@ -106,7 +119,7 @@ const Main = {
 
                 
                 const obj = [
-                    {task: value},
+                    {task: value, done: isDone},
                     ...savedTasksObjt, // spread operator: ele adicionar todos os itens dentro do mesmo array
                 ]
                 
